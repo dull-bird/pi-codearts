@@ -9,6 +9,8 @@
 | 全新开发依赖安装 | 通过 | `npm ci --ignore-scripts`；不再依赖作者机器的 Homebrew 包链接 |
 | TypeScript | 通过 | `npm run check` |
 | 离线回归 | **66/66 通过** | `npm test`，包含打包及隔离 Pi home 安装 |
+| GitHub Actions | 通过 | Linux Node 24、Node 26 两个任务均成功：[CI 记录](https://github.com/dull-bird/pi-codearts/actions/runs/42845746725) |
+| 公开 GitHub 源安装 | 通过 | 从真实仓库执行 `pi install git:...@<commit>`，隔离 HOME 成功加载插件，使用纯模拟凭据离线注册模型 |
 | 官方 Pi 原生登录 | 通过 | `ModelRuntime.login` → 官方浏览器 → PKCE/DPoP → 保存凭据 |
 | 登录后立即有模型 | 通过 | 登录后的 Pi 模型列表非空；发现 11 个模型 |
 | 真实自动续期协议 | 通过 | 只在 Pi 自有凭据锁内执行真实 Refresh Token 请求 |
@@ -66,7 +68,7 @@
 - 未等待数小时让真实 Access Token 自然过期。真实刷新和跨进程持久登录已验证；过期触发与并发互斥在真实 Pi Runtime 配合模拟服务端验证。
 - 未真实耗尽上下文、积分、并发数或限流额度；相应错误分支使用合成响应。
 - 未宣称支持任意 OIDC/SSO、device-code、任意华为云 API Key 或完全不同的私有协议。
-- CI 工作流配置为 Linux Node 24/26，只运行无账号测试；真实账号回归不进入公共 CI。
+- CI 已在 Linux Node 24/26 通过，但只运行无真实账号测试；真实账号回归不进入公共 CI。
 
 ## 重跑
 

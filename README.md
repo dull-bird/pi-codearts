@@ -1,5 +1,7 @@
 # Pi CodeArts Provider
 
+[![CI](https://github.com/dull-bird/pi-codearts/actions/workflows/ci.yml/badge.svg)](https://github.com/dull-bird/pi-codearts/actions/workflows/ci.yml)
+
 [English quick start](#english-quick-start) · [环境配置](docs/environments.md) · [安全说明](SECURITY.md) · [测试报告](TEST-REPORT.md)
 
 为 **Pi** 接入 CodeArts 的非官方 Provider 插件。直接使用官方网页授权、DPoP Refresh Token 和签名请求，**不启动 CodeArts CLI，不需要本地代理，不要求手工复制 Token**。
