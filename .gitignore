@@ -1,0 +1,14 @@
+node_modules/
+research/
+*.log
+*.tmp
+auth.json
+.env
+coverage/
+*.tgz
+.DS_Store
+.env.*
+codearts.json
+codearts-models*.json
+*.pem
+*.key
