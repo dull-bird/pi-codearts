@@ -1,8 +1,8 @@
 {
   "name": "pi-codearts",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
-  "description": "Native CodeArts OAuth provider for Pi: renewable login, environment profiles, dynamic models and thinking levels; no CodeArts CLI",
+  "description": "Native CodeArts OAuth provider for Pi and OMP: renewable login, isolated environments, dynamic models and thinking levels; no CodeArts CLI",
   "license": "MIT",
   "author": "dull-bird",
   "repository": { "type": "git", "url": "https://github.com/dull-bird/pi-codearts.git" },
@@ -10,11 +10,20 @@
   "bugs": { "url": "https://github.com/dull-bird/pi-codearts/issues" },
   "keywords": ["pi-package", "pi-extension", "codearts", "provider", "oauth", "huawei"],
   "engines": { "node": ">=22.16.0" },
-  "files": ["index.ts", "core.mjs", "login.mjs", "environments.mjs", "catalog.mjs", "sessions.mjs", "README.md", "LICENSE", "CHANGELOG.md", "SECURITY.md", "TEST-REPORT.md", "docs/"],
+  "files": ["index.ts", "omp.mjs", "extension.mjs", "stream.mjs", "transport.mjs", "core.mjs", "login.mjs", "environments.mjs", "catalog.mjs", "sessions.mjs", "README.md", "LICENSE", "CHANGELOG.md", "SECURITY.md", "TEST-REPORT.md", "docs/"],
   "pi": { "extensions": ["./index.ts"] },
+  "omp": { "extensions": ["./omp.mjs"] },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
-    "@earendil-works/pi-coding-agent": "*"
+    "@earendil-works/pi-coding-agent": "*",
+    "@oh-my-pi/pi-ai": "*",
+    "@oh-my-pi/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-ai": { "optional": true },
+    "@earendil-works/pi-coding-agent": { "optional": true },
+    "@oh-my-pi/pi-ai": { "optional": true },
+    "@oh-my-pi/pi-coding-agent": { "optional": true }
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
@@ -22,7 +31,9 @@
     "test:e2e": "node test/e2e.mjs",
     "test:login": "node test/login-live.mjs",
     "test:refresh": "node test/refresh-live.mjs",
-    "check": "tsc --noEmit",
+    "test:omp:live": "node test/omp-live.mjs",
+    "test:omp:e2e": "node test/omp-e2e.mjs",
+    "check": "tsc --noEmit && node --check omp.mjs && node --check extension.mjs && node --check stream.mjs && node --check transport.mjs",
     "setup": "node setup.mjs"
   },
   "devDependencies": {

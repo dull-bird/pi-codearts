@@ -11,6 +11,7 @@ export async function accountFor(auth,signal,fetchImpl=fetch,environment=OFFICIA
 }
 export async function browserLogin(callbacks, {fetchImpl=fetch,timeoutMs=300000,environment=OFFICIAL}={}) {
   const signal=callbacks.signal ? AbortSignal.any([callbacks.signal,AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs);
+  const application=callbacks.applicationName==='OMP'?'OMP':'Pi';
   signal.throwIfAborted();
   const verifier=randomBytes(64).toString('hex'),ticket=randomBytes(32).toString('hex'),state=randomBytes(32).toString('hex');
   const pair=await newKeyPair();
@@ -26,7 +27,7 @@ export async function browserLogin(callbacks, {fetchImpl=fetch,timeoutMs=300000,
     const code=url.searchParams.get('code'),secret=url.searchParams.get('secret');
     if(!code&&!secret){res.writeHead(200).end('CodeArts Pi login is waiting.');return;}
     if(claimed){res.writeHead(409).end('Callback already received.');return;}
-    claimed=true;res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer'}).end('授权已收到，请返回 Pi。Authorization received. Return to Pi.');
+    claimed=true;res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer'}).end(`授权已收到，请返回 ${application}。Authorization received. Return to ${application}.`);
     resolveCode({code,secret});
   });
   const onAbort=()=>rejectCode(signal.reason || new Error('Login cancelled'));
@@ -37,7 +38,7 @@ export async function browserLogin(callbacks, {fetchImpl=fetch,timeoutMs=300000,
     signal.throwIfAborted();
     const port=server.address().port,redirect=`http://127.0.0.1:${port}/oauth/callback`;
     const params=new URLSearchParams({locale:'zh-cn',client_id:environment.clientId,port:String(port),code_challenge:createHash('sha256').update(verifier).digest('base64url'),code_challenge_method:environment.pkceMethod,ticket_id:ticket,...(environment.stateMode==='required'?{state}:{}),...(environment.scope?{scope:environment.scope}:{})});
-    callbacks.onAuth({url:`${environment.authorizeUrl}?${params}`,instructions:'在浏览器完成 CodeArts 登录，授权后自动返回 Pi（5 分钟超时）。'});
+    callbacks.onAuth({url:`${environment.authorizeUrl}?${params}`,instructions:`在浏览器完成 CodeArts 登录，授权后自动返回 ${application}（5 分钟超时）。`});
     const result=await pending;
     let auth;
     if(result.code) auth=await tokenRequest({grant_type:'authorization_code',code:result.code,code_verifier:verifier,redirect_uri:redirect},pair,signal,undefined,fetchImpl,environment);

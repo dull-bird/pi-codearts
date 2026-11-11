@@ -4,9 +4,10 @@
 
 [English quick start](#english-quick-start) · [环境配置](docs/environments.md) · [安全说明](SECURITY.md) · [测试报告](TEST-REPORT.md)
 
-为 **Pi** 接入 CodeArts 的非官方 Provider 插件。直接使用官方网页授权、DPoP Refresh Token 和签名请求，**不启动 CodeArts CLI，不需要本地代理，不要求手工复制 Token**。
+为 **Pi 和 OMP（Oh My Pi）** 接入 CodeArts 的非官方 Provider 插件。直接使用官方网页授权、DPoP Refresh Token 和签名请求，**不启动 CodeArts CLI，不需要本地代理，不要求手工复制 Token**。
 
-- 独立 OAuth 登录，Pi 在调用前自动续期，并持久保存轮换后的凭据。
+- 双宿主原生入口，共享认证与协议代码，不通过另一宿主中转。
+- 独立 OAuth 登录，各宿主按需续期，并持久保存自己轮换后的凭据。
 - 动态发现账号可见的模型、图片能力和服务端公布的思考等级。
 - 多环境独立 Provider：官方环境、兼容协议的企业/区域环境分别授权，不混用凭据。
 - 流式文本/思考、工具调用与结果回传、图片、取消、busy/idle 心跳。
@@ -16,15 +17,29 @@
 
 ## 安装
 
-需要 Pi，当前验证版本为 **Pi 1.5.0**。扩展由 Pi 加载，无需自行编译 TypeScript。
+当前验证版本：**Pi 1.5.0、OMP 18.18.6**。无需自行编译。
+
+### Pi
 
 ```bash
-pi install git:github.com/dull-bird/pi-codearts@v0.2.0
+pi install git:github.com/dull-bird/pi-codearts@v0.3.0
 ```
 
 在正在运行的 Pi 中执行 `/reload`；新启动的 Pi 自动加载。
 
 > 如果此前已手动安装开发软链接，不要再同时安装 Git 包。先移除自己创建的 `~/.pi/agent/extensions/codearts` 链接，再用 `pi install`，避免重复注册。
+
+### OMP
+
+```bash
+omp plugin install 'github:dull-bird/pi-codearts#v0.3.0'
+omp login codearts
+omp --model codearts/glm-5.3-flash
+```
+
+OMP 使用自己的 `omp.mjs` 原生入口，不加载 Pi 专用的 `index.ts`。重启 OMP 后生效。开发者也可在克隆的仓库执行 `omp plugin link .`。
+
+**Pi 与 OMP 必须分别登录。不要复制两者的 Refresh Token 或认证数据库**，否则两个宿主轮换同一个令牌可能互相使登录失效。升级无需重做已有 Pi 独立授权。
 
 ## 首次使用
 
@@ -47,7 +62,7 @@ pi --model codearts/glm-5.3-flash
 
 ## 长期登录与自动续期
 
-浏览器授权使用 PKCE 和 ES256 DPoP，取得服务端签发的临时 AK/SK、Security Token 和 Refresh Token。Pi 保存到自己的认证存储，后续在调用前自动刷新；刷新在 Pi 的凭据锁内进行，避免并发轮换冲突。
+浏览器授权使用 PKCE 和 ES256 DPoP，取得服务端签发的临时 AK/SK、Security Token 和 Refresh Token。两个宿主分别保存到自己的认证存储，在宿主的刷新协调机制下按需续期并保存轮换后的凭据。OMP 使用原生 SQLite AuthStorage；不复用 Pi 或原客户端的 Refresh Token。
 
 - 到期时间以服务端响应为准，不硬编码“永久有效”或固定天数。
 - 扩展预留 1 分钟；Pi 自己还会应用提前刷新窗口，当前默认约 5 分钟。
@@ -70,7 +85,7 @@ pi --model codearts/glm-5.3-flash
 | `glm-5.2-sft-harmony` | `high`、`max` |
 | 其余当前可见模型 | 当前未公布可选强度 |
 
-`GLM-5.2` 的 high 和 max 已分别进行真实推理验证，收到思考流；Pi 的选择会映射为请求中的 `reasoning_effort`。**未公布强度不等于模型本身完全不能思考，只表示此服务当前没有提供可依赖的强度选择。**
+`GLM-5.2` 的 high 和 max 在两个宿主中均已真实收到结构化思考流；选择映射为请求中的 `reasoning_effort`。开启思考不保证每次回答都有可见思考：简单题可能只有正文；插件不伪造思考文本，也不删除系统提示词来强制触发。**未公布强度不等于模型本身完全不能思考，只表示此服务当前没有提供可依赖的强度选择。**
 
 刷新能力后，重新选择模型；必要时 `/reload`，使当前选中的旧模型对象也得到更新。Pi 中可使用 `/thinking`（或配置的思考等级快捷键）选择支持的等级，也可：
 
@@ -129,13 +144,15 @@ pi --model codearts/GLM-5.2 --thinking high
 ~/.pi/agent/codearts-models-<id>.json       其他环境的隔离缓存
 ```
 
-遵循 Pi 的 `PI_CODING_AGENT_DIR`。`PI_CODEARTS_CONFIG` 可指定个人环境配置文件。**不自动读取项目仓库里的端点配置，以免项目文件把凭据引向陌生服务器。** 企业地址本身也可能敏感，不要随意把个人配置提交到 Git。
+OMP 默认在 `~/.omp/agent/` 下保存同名环境配置和模型缓存，凭据由 `agent.db` 管理；profile/XDG 设置可能改变位置，以宿主实际 agent 目录为准。账户显示为不含账户 JSON 的稳定不透明 ID。
+
+遵循宿主解析的 agent 目录，包括 Pi 的 `PI_CODING_AGENT_DIR`。`PI_CODEARTS_CONFIG` 可指定个人环境配置文件。**不自动读取项目仓库里的端点配置，以免项目文件把凭据引向陌生服务器。** 企业地址本身也可能敏感，不要随意把个人配置提交到 Git。
 
 已有 v0.1 独立官方凭据可继续使用；无需为了升级立即重新授权。其他环境必须分别授权；变更认证地址会使原绑定失效，而不是迁移 Refresh Token。
 
 ## 更新和移除
 
-上面的版本标签安装固定在 v0.2.0。升级时安装新的版本标签，并移除旧的包声明。若希望手动跟随 main，可不指定标签：
+上面的版本标签安装固定在 v0.3.0。升级时安装新的版本标签，并移除旧的包声明。若希望手动跟随 main，可不指定标签：
 
 ```bash
 pi install git:github.com/dull-bird/pi-codearts
@@ -163,7 +180,11 @@ npm run test:live      # 真实文本、工具、取消、图片、思考强度�
 npm run test:e2e       # 真正运行 Pi，执行临时目录里的 read 工具
 npm run test:refresh   # 在凭据锁内真实刷新 Pi 自有凭据，再用新进程验证持久登录
 npm run test:login     # 重新打开浏览器，走 Pi 原生登录，再测试真实刷新
+npm run test:omp:live  # OMP 独立登录后的刷新、文本、工具、图片、思考和取消
+npm run test:omp:e2e   # 真正运行 OMP，read 工具循环与 high/max 思考 delta
 ```
+
+`npm test` 的 OMP 集成测试需已安装 OMP（默认 `~/.local/bin/omp`，可设置 `CODEARTS_OMP_BINARY`），否则明确跳过。该测试解包发布 tarball，再使用合成凭据及响应运行 9 阶段原生宿主测试。Linux CI 默认不安装 OMP，不把跳过说成通过。
 
 **真实测试会消耗少量账号额度。** 只上传固定测试文本、本地生成的 PNG 和临时测试文件，不上传用户项目。`test:login` 会更新 Pi 的 CodeArts 登录，不作为普通离线回归的一部分。离线 CI 不使用账号或 secrets。
 
@@ -171,11 +192,13 @@ npm run test:login     # 重新打开浏览器，走 Pi 原生登录，再测试
 
 ## English quick start
 
-An unofficial **Pi extension package registering a CodeArts provider**. Native browser OAuth with refresh-token rotation; no CodeArts CLI subprocess and no local proxy.
+An unofficial **dual-host Pi / OMP package registering a native CodeArts provider**. Native browser OAuth with refresh-token rotation; no CodeArts CLI subprocess and no local proxy.
 
 ```bash
-pi install git:github.com/dull-bird/pi-codearts@v0.2.0
+pi install git:github.com/dull-bird/pi-codearts@v0.3.0
 ```
+
+For OMP: `omp plugin install 'github:dull-bird/pi-codearts#v0.3.0'`, then `omp login codearts`. Each host uses its own entry point and credential store; never share refresh tokens between hosts.
 
 In Pi: `/reload`, `/login` → CodeArts, then `/model`. Each user authorizes their own account. Models and supported reasoning levels are discovered from the service, not copied from the author's account. Compatible enterprise endpoints can be configured as separate, credential-isolated providers; arbitrary Huawei Cloud products and incompatible SSO deployments are not automatically supported. Refresh tokens can still be revoked by the service.
 

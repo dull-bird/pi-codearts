@@ -1,4 +1,32 @@
-# 测试报告：v0.2.0
+# 测试报告：v0.3.0
+
+日期：2026-11-11。macOS arm64、Node 26.13.0、Pi 1.5.0、OMP 18.18.6。
+
+## 双宿主回归
+
+- `npm run check`：通过。
+- `npm test`：本机 **67/67 通过、0 跳过**。保留原 66 项 Pi/协议回归，加 1 项真实 OMP 宿主集成测试，内部 9 阶段覆盖注册、effort 映射、父子会话 lease 隔离、Unicode SSE、high/max 思考事件、工具/replay、图片、错误/取消以及 OAuth/SQLite 持久化/五并发 single-flight 刷新轮换。该测试解包 release tarball，并通过隔离 HOME 的 OMP 本地包安装器加载，不使用真实凭据。
+- `npm run test:live`：Pi 的真实文本、工具、回放、图片及图片工具结果、high/max 思考、流中取消、HTTP-200 busy/idle 全通过。
+- `npm run test:e2e`：真实 Pi CLI → CodeArts → 原生 read → 工具结果 → 最终答案通过。
+- OMP 原生 `omp login codearts`：独立浏览器 PKCE/DPoP 授权成功；原生 agent.db 存储权限 0600；发现 11 个模型。
+- `npm run test:omp:live`：独立 OMP refresh 持久化、中文 SSE、工具/replay、图片/图片工具结果、high/max 思考、流中取消全通过；所有 heartbeat HTTP 200、最后 idle。最近一轮 high 上游 reasoning 173 字符/30 个 thinking delta；max 405 字符/57 个 delta。数字仅证明流存在，不衡量推理质量。
+- `npm run test:omp:e2e`：完整 OMP CLI 的原生 read 工具循环以及 high/max 结构化 thinking delta 和正确最终答案全部通过；保留完整 CLI 系统提示词。
+- OMP 真实回归前后，Pi 的 CodeArts 凭据摘要及原 CodeArts 客户端认证文件摘要不变。没有共享/复制其 Refresh Token。
+
+### 真实测试中的非确定性与修正
+
+GLM-5.2 在简单 13×17 题上有时仅返回正文，即使请求正确包含 enabled/high。这不等于 OMP 丢失思考，也不能根据 UI 档位宣称收到思考。诊断曾怀疑系统提示词，但保留真实系统提示词、换用需核算的题并明确要求核验后，high/max 均收到原生思考 delta。最终测试仍严格断言思考事件与正确答案，不删除系统消息、不生成假思考。模型响应本身仍可能变化，真实测试不保证确定性。
+
+Pi 的旧 live 测试使用 256/512 token 上限，本轮出现正常的 length 终止；测试预算增至 2048 后完整通过，没有把 length 当成功。诊断中大数乘法也曾得到错误答案，未绕过断言，最终采用可核验且较稳定的四位数乘法。
+
+### 边界
+
+Linux Node 24/26 CI 不默认安装 OMP：新增宿主测试会明确 skip，其余 66 项照常运行。OMP 完整宿主测试已在本机真实 18.18.6 二进制中通过；不要把 CI 的跳过说成通过。此前 v0.2.0 CI 链接只证明旧版，不作为本版结果。
+
+未等待 access 自然过期；真实 refresh/持久化及模拟过期/并发轮换已验证。其他企业/区域/商业账号仍只做合成协议测试，不宣称全部部署可用。OMP 本地解包安装已测试；公开 Git 源安装须在对应版本发布后验证。
+
+## v0.2.0 历史报告
+
 
 日期：2026-11-10。真实账号回归环境：macOS arm64、Node 26.13.0、Pi 1.5.0。
 

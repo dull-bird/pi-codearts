@@ -1,12 +1,13 @@
 # Security policy
 
-This is an unofficial, in-process Pi extension. Installing it gives it the same operating-system permissions as Pi. Review source before installing; use only accounts and environments you are authorized to access.
+This is an unofficial, in-process Pi / OMP extension. Installing it gives it the same operating-system permissions as its host. Review source before installing; use only accounts and environments you are authorized to access.
 
 ## Credential boundaries
 
-- Independent browser OAuth is the default. Refresh tokens are rotated through Pi's credential store, which serializes refresh operations. Credentials are never stored in this repository or model cache.
+- Independent browser OAuth is the default. Refresh tokens are rotated through each host's native credential store and refresh coordination (Pi auth.json; OMP SQLite AuthStorage). Credentials are never stored in this repository or model cache.
 - No silent fallback to a CodeArts client's login. Read-only import and non-refreshable temporary authorization require explicit opt-in; neither is represented as durable OAuth.
-- Refreshes only use Pi-owned credentials. The extension does not rotate or write the CodeArts client's original credential files.
+- Pi and OMP must authorize independently. Do not copy refresh tokens or authentication databases between hosts: independent rotation of the same token can invalidate the other host's login. OMP's displayed account identity is opaque; the private protocol account JSON stays in its credential store.
+- Refreshes only use credentials owned by the current host. The extension does not rotate or write the CodeArts client's original credential files.
 - New credentials are bound to a configured environment. Existing official unbound credentials migrate only to the original official environment.
 - A custom environment is a trust decision, not just a convenience URL. Configuring a malicious identity service or gateway can expose credentials and prompts. Confirm all endpoints with your administrator.
 - Endpoints must use HTTPS without URL credentials, query strings or fragments. Model-supplied URLs and project configuration cannot redirect credential routing. Chat transport restricts the exact configured path; credential-bearing fetches disable redirects.
