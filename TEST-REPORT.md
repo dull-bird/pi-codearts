@@ -21,9 +21,9 @@ Pi 的旧 live 测试使用 256/512 token 上限，本轮出现正常的 length 
 
 ### 边界
 
-Linux Node 24/26 CI 不默认安装 OMP：新增宿主测试会明确 skip，其余 66 项照常运行。OMP 完整宿主测试已在本机真实 18.18.6 二进制中通过；不要把 CI 的跳过说成通过。此前 v0.2.0 CI 链接只证明旧版，不作为本版结果。
+Linux Node 24/26 CI 不默认安装 OMP：新增宿主测试会明确 skip，其余 66 项照常运行。OMP 完整宿主测试已在本机真实 18.18.6 二进制中通过；不要把 CI 的跳过说成通过。v0.3.0 代码的 Linux Node 24/26 CI 已通过：[运行记录](https://github.com/dull-bird/pi-codearts/actions/runs/42944647659)。其中 OMP 项按上述条件跳过，不计为通过。
 
-未等待 access 自然过期；真实 refresh/持久化及模拟过期/并发轮换已验证。其他企业/区域/商业账号仍只做合成协议测试，不宣称全部部署可用。OMP 本地解包安装已测试；公开 Git 源安装须在对应版本发布后验证。
+未等待 access 自然过期；真实 refresh/持久化及模拟过期/并发轮换已验证。其他企业/区域/商业账号仍只做合成协议测试，不宣称全部部署可用。OMP 本地解包安装已测试；还从公开 GitHub 源的 v0.3.0 代码 commit（9a56529）在隔离 HOME 执行 `omp plugin install github:dull-bird/pi-codearts#9a56529`，确认安装成功并选择 `omp.mjs` 原生入口。
 
 ## v0.2.0 历史报告
 
