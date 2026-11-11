@@ -35,6 +35,6 @@ test('real OMP host: registration, streaming, tools, images, cancellation, OAuth
     running.child.stdin.end();
     const { stderr } = await running;
     const result = JSON.parse(await readFile(resultPath, 'utf8'));
-    assert.equal(result.passed.length, 9, stderr);
+    assert.equal(result.passed.length, 10, stderr);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

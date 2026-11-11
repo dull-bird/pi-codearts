@@ -20,6 +20,7 @@ PKCE and ES256 DPoP bind the authorization code exchange and token requests. A r
 ## Operational limits
 
 - Refresh tokens can expire or be revoked. Reauthorization is then required.
+- `/codearts-usage` sends a read-only signed GET to the verified official subscription endpoint. It uses the current host's independent OAuth credential, not browser cookies, and renders allowlisted quota fields rather than the raw account response. Custom environments are not probed. Package totals are not a promise of available billing credits or real-time entitlement.
 - Background model discovery is metadata-only, bounded by a timeout, and canceled on session shutdown. No code self-update or subnet scanning.
 - busy/idle heartbeats are best effort. Network loss or a forced process kill can prevent idle delivery; service-side cleanup still matters. The extension does not bypass concurrent-session quotas.
 - Usage totals are service-reported; zero configured cost is not a promise of free service.

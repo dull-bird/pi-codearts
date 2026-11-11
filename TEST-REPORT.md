@@ -1,4 +1,13 @@
-# 测试报告：v0.3.0
+# 测试报告：v0.4.0
+
+- 最终本机 `npm run check` 通过、`npm test` **70/70 通过、0 跳过**；Pi/OMP 真实推理与 CLI 工具循环、high/max 思考回归均通过。
+- 官方独立 OAuth 凭据对 `/snap-manager/v1/statistics/plugin` 的真实只读签名 GET 返回 HTTP 200，证明无需浏览器 Cookie。
+- `npm run test:usage` 通过：验证专业版、统计周期、Token 已用/总额、剩余量计算及原客户端凭据文件未改变。
+- 新增用量离线测试：路径/环境绑定、无 body、禁止重定向、取消、HTTP/业务/JSON 错误、响应不回显、绝对 Token 与模型百分比单位区分。
+- OMP 原生测试扩展为 10 阶段：真实命令 context 经 AuthStorage 获取凭据并显示剩余量，随后原有 OAuth 轮换回归继续通过。全量数量见下方重跑说明。
+- 用量功能只适配已实测官方环境，不宣称积分、所有套餐或其他部署均返回相同字段。
+
+## v0.3.0 历史报告
 
 日期：2026-11-11。macOS arm64、Node 26.13.0、Pi 1.5.0、OMP 18.18.6。
 

@@ -11,6 +11,7 @@ const DEFAULT_PATHS = {
   heartbeat: '/snap-manager/v1/chat-session/heartbeat',
   models: '/v1/models',
   variants: '/v1/model/thinking-variants',
+  usage: '/snap-manager/v1/statistics/plugin',
 };
 const DEFAULT_AGENT = 'a8bcb36232554267a5142361cc25a393';
 
@@ -23,7 +24,7 @@ function httpsUrl(value, field) {
   return url;
 }
 function route(value, field) {
-  if (value === null && ['account', 'heartbeat', 'variants'].includes(field)) return null;
+  if (value === null && ['account', 'heartbeat', 'variants', 'usage'].includes(field)) return null;
   if (typeof value !== 'string' || !/^\/(?!\/)/.test(value) || /[?#\\\s]/.test(value)
       || new URL(value, 'https://invalid.example').pathname !== value) {
     throw new Error(`Invalid CodeArts path: ${field}`);

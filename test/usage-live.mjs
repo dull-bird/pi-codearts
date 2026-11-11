@@ -1,0 +1,21 @@
+// Read-only real-account check; explicit live test, never run by public CI.
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { join } from 'node:path';
+import { realAuth } from './real-auth.mjs';
+import { DATA_DIR } from '../core.mjs';
+import { OFFICIAL } from '../environments.mjs';
+import { queryUsage, formatUsage } from '../usage.mjs';
+const original = await readFile(join(DATA_DIR, 'auth.json')).then(bytes => createHash('sha256').update(bytes).digest('hex')).catch(() => undefined);
+const auth = await realAuth();
+const summary = await queryUsage(auth, AbortSignal.timeout(20000), OFFICIAL);
+assert.ok(summary.packageName); assert.ok(summary.token);
+assert.equal(summary.token.used + summary.token.remaining, summary.token.total);
+assert.ok(summary.token.remaining >= 0 && summary.token.remaining <= summary.token.total);
+assert.ok(summary.startDate && summary.endDate);
+assert.ok(!formatUsage(summary).includes(auth.refresh));
+console.log(formatUsage(summary));
+console.log('PASS real read-only official package usage, remaining-token arithmetic and credential-free output');
+if (original) assert.equal(createHash('sha256').update(await readFile(join(DATA_DIR, 'auth.json'))).digest('hex'), original);
+console.log('PASS original CodeArts credentials unchanged');

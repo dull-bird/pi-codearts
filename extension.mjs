@@ -5,6 +5,7 @@ import { sessionLeases } from './sessions.mjs';
 import { OFFICIAL, assertEnvironment, providerId, chatBaseUrl, loadEnvironments, configPath,
   normalizeEnvironment, saveEnvironment, detectClientEnvironments } from './environments.mjs';
 import { loadCatalog, saveCatalog, isCatalogStale } from './catalog.mjs';
+import { queryUsage, formatUsage } from './usage.mjs';
 
 export const piModels = catalog => catalog.map(model => ({ ...model, compat: {
   supportsStore: false, supportsDeveloperRole: false, maxTokensField: 'max_tokens',
@@ -101,6 +102,21 @@ export async function registerCodeArts(pi, {
         const models = await discoverModels(auth, signal, environment);
         await saveCatalog(agentDir, environment, models); state.models = models; state.configure();
         if (ctx.hasUI) ctx.ui.notify(`${environment.label}: 已刷新 ${models.length} 个模型及思考能力。用 /model 选择。`, 'info');
+      } catch (error) { reportError(error, ctx); }
+    },
+  });
+  pi.registerCommand('codearts-usage', {
+    description: '只读查询官方环境的套餐、Token 用量及剩余量（不输出凭据）',
+    handler: async (_args, ctx) => {
+      const state = chooseState('', ctx), environment = state.environment;
+      if (environment.id !== 'official') return reportError(new Error('用量查询目前仅适配 CodeArts 官方环境'), ctx);
+      if (ctx.hasUI) ctx.ui.notify('正在查询套餐用量…', 'info');
+      try {
+        const signal = AbortSignal.timeout(20000);
+        const resolved = await getProviderAuth(ctx, providerId(environment));
+        const auth = await resolveAuth(resolved?.auth.apiKey, signal, environment);
+        const summary = await queryUsage(auth, signal, environment);
+        if (ctx.hasUI) ctx.ui.notify(formatUsage(summary), 'info');
       } catch (error) { reportError(error, ctx); }
     },
   });

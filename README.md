@@ -11,6 +11,7 @@
 - 动态发现账号可见的模型、图片能力和服务端公布的思考等级。
 - 多环境独立 Provider：官方环境、兼容协议的企业/区域环境分别授权，不混用凭据。
 - 流式文本/思考、工具调用与结果回传、图片、取消、busy/idle 心跳。
+- 官方环境可只读查询个人套餐、Token 已用量和剩余量。
 - 默认不读取或依赖原 CodeArts 客户端登录；临时票据登录不会冒充长期授权。
 
 **不是华为官方项目。不是整个华为云的通用认证插件。** 兼容协议、账号权益与已验证范围见下文。
@@ -22,7 +23,7 @@
 ### Pi
 
 ```bash
-pi install git:github.com/dull-bird/pi-codearts@v0.3.0
+pi install git:github.com/dull-bird/pi-codearts@v0.4.0
 ```
 
 在正在运行的 Pi 中执行 `/reload`；新启动的 Pi 自动加载。
@@ -32,7 +33,7 @@ pi install git:github.com/dull-bird/pi-codearts@v0.3.0
 ### OMP
 
 ```bash
-omp plugin install 'github:dull-bird/pi-codearts#v0.3.0'
+omp plugin install 'github:dull-bird/pi-codearts#v0.4.0'
 omp login codearts
 omp --model codearts/glm-5.3-flash
 ```
@@ -121,11 +122,28 @@ pi --model codearts/GLM-5.2 --thinking high
 
 目前发现的 11 个模型不是发布时的硬编码模型清单；账号权限、可见模型和积分以服务端为准。
 
+## 查询套餐用量
+
+在 Pi 或 OMP 的交互界面执行：
+
+```text
+/codearts-usage
+```
+
+只读调用官方客户端使用的 `/snap-manager/v1/statistics/plugin`，沿用当前宿主自己的独立 OAuth 凭据。显示套餐、统计周期、Token 已用量/总额以及按两者计算的剩余量，不输出凭据或账户原始响应。如果当前账号有 `model_metrics`，也显示其用量百分比和启用状态。
+
+- 这是**套餐统计**，不是本次会话 token usage，也不是推理请求。
+- 剩余量按服务端总额减已用量计算；有效期、套餐变更和统计延迟以控制台为准。
+- 积分与 Token 是不同计量单位，不能把 Token 数值换算为现金或积分余额。
+- 目前只适配已实测的官方环境；自定义企业环境不会被探测，也不会收到该请求。
+- 可选 `npm run test:usage` 验证真实账号查询（无推理消耗）；OAuth 无法读取套餐时会明确报错。
+
 ## 命令
 
 | 命令 | 用途 |
 | --- | --- |
 | `/login` | 独立登录官方环境或已配置的其他环境 |
+| `/codearts-usage` | 只读查询官方套餐、Token 用量和剩余量 |
 | `/codearts-refresh [provider-id]` | 刷新该环境的模型和思考能力 |
 | `/codearts-status [provider-id]` | 登录来源、续期能力、到期时间、网关和思考等级；不显示秘密 |
 | `/codearts-environments` | 列出已信任的环境，不发送认证请求 |
@@ -152,7 +170,7 @@ OMP 默认在 `~/.omp/agent/` 下保存同名环境配置和模型缓存，凭�
 
 ## 更新和移除
 
-上面的版本标签安装固定在 v0.3.0。升级时安装新的版本标签，并移除旧的包声明。若希望手动跟随 main，可不指定标签：
+上面的版本标签安装固定在 v0.4.0。升级时安装新的版本标签，并移除旧的包声明。若希望手动跟随 main，可不指定标签：
 
 ```bash
 pi install git:github.com/dull-bird/pi-codearts
@@ -195,10 +213,10 @@ npm run test:omp:e2e   # 真正运行 OMP，read 工具循环与 high/max 思考
 An unofficial **dual-host Pi / OMP package registering a native CodeArts provider**. Native browser OAuth with refresh-token rotation; no CodeArts CLI subprocess and no local proxy.
 
 ```bash
-pi install git:github.com/dull-bird/pi-codearts@v0.3.0
+pi install git:github.com/dull-bird/pi-codearts@v0.4.0
 ```
 
-For OMP: `omp plugin install 'github:dull-bird/pi-codearts#v0.3.0'`, then `omp login codearts`. Each host uses its own entry point and credential store; never share refresh tokens between hosts.
+For OMP: `omp plugin install 'github:dull-bird/pi-codearts#v0.4.0'`, then `omp login codearts`. Each host uses its own entry point and credential store; never share refresh tokens between hosts.
 
 In Pi: `/reload`, `/login` → CodeArts, then `/model`. Each user authorizes their own account. Models and supported reasoning levels are discovered from the service, not copied from the author's account. Compatible enterprise endpoints can be configured as separate, credential-isolated providers; arbitrary Huawei Cloud products and incompatible SSO deployments are not automatically supported. Refresh tokens can still be revoked by the service.
 

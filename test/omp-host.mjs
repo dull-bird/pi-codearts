@@ -51,7 +51,23 @@ export default async function () {
       assert.ok(providers.get('codearts').fetchDynamicModels);
       assert.equal(providers.get('codearts').refreshModels, undefined);
       assert.deepEqual(registry.find('codearts', 'omp-thinking').thinking.efforts, ['high', 'max']);
-      assert.equal(commands.size, 4);
+      assert.equal(commands.size, 5);
+    });
+    await test('usage command returns server totals and remaining quota without secrets', async () => {
+      await storage.credentials.set('codearts', { type: 'oauth', ...auth });
+      await storage.credentials.reload();
+      const notices = [];
+      globalThis.fetch = async (url, init) => {
+        assert.equal(new URL(String(url)).pathname, OFFICIAL.paths.usage);
+        assert.equal(init.method, 'GET');
+        assert.match(new Headers(init.headers).get('authorization'), /^SDK-HMAC-SHA256 /);
+        return Response.json({ start_date: '2026-11-01', end_date: '2026-11-30', package: { package_name_cn: '测试套餐', status: 'normal', is_token_package: true }, metrics: [{ name: 'usageTokenChatMessages', usage_token_num: 25, package_token_amount: 100, show: true }], model_metrics: [] });
+      };
+      await commands.get('codearts-usage').handler('', { hasUI: true, model: registry.find('codearts', 'omp-test'), modelRegistry: registry, ui: { notify: message => notices.push(message) } });
+      assert.match(notices.at(-1), /剩余 75/); assert.ok(!notices.at(-1).includes(auth.refresh));
+      // Leave the credential store untouched for the later rotation regression.
+      await storage.credentials.remove('codearts');
+      await storage.credentials.reload();
     });
     await test('child teardown cannot close parent heartbeat ownership', async () => {
       let parentClosed = 0, childClosed = 0;

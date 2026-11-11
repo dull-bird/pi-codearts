@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.0] - 2026-11-11
+
+- Add `/codearts-usage` for the verified official CodeArts subscription endpoint in both Pi and OMP.
+- Display package status, billing period, absolute token totals and calculated remaining tokens; preserve model percentage quotas without conflating units.
+- Use read-only signed GET requests with the current host's own OAuth credential; never use browser cookies or probe custom environments.
+- Validate business/HTTP/JSON failures without echoing account or response details.
+- Add synthetic quota/security regressions, native OMP command coverage and real read-only account verification.
+
+
 ## [0.3.0] - 2026-11-11
 
 - Add a native OMP 18.18.6 entry point and dual-host package manifests; retain Pi 1.5.0 support.
